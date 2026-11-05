@@ -4,49 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Photobooth Studio</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#0f172a">
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <div class="kiosk-app">
-    <!-- Camera & Result Full Viewport (Left/Center) -->
     <main class="view-viewport">
-      <!-- Floating Header Brand -->
       <div class="floating-brand">
         <span>📸</span> <strong>Photobooth Studio</strong>
       </div>
-
-      <!-- Live Video View -->
       <div id="videoContainer" class="video-container">
         <video id="webcam" autoplay playsinline muted class="mirror"></video>
         <div id="countdownOverlay" class="countdown-overlay"></div>
         <div id="flashOverlay" class="flash-overlay"></div>
       </div>
-
-      <!-- Result View -->
       <div id="resultContainer" class="result-container" style="display: none;">
         <img id="resultImage" alt="Hasil Foto">
       </div>
     </main>
 
-    <!-- Ultra-Clean Controls Panel (Right Side) -->
     <aside class="control-panel">
-      <!-- Camera Mode Controls -->
       <div id="cameraControls" class="panel-section active">
         <div class="panel-header">
           <h3>Pengaturan</h3>
         </div>
-
         <div class="control-grid">
           <div class="control-item">
             <label for="cameraSelect">Kamera</label>
             <select id="cameraSelect" disabled><option>Memuat...</option></select>
           </div>
-
           <div class="control-item">
             <label for="filterSelect">Filter</label>
             <select id="filterSelect">
@@ -57,7 +46,6 @@
               <option value="hue-rotate(180deg)">Cyberpunk</option>
             </select>
           </div>
-
           <div class="control-item">
             <label for="modeSelect">Mode</label>
             <select id="modeSelect">
@@ -65,7 +53,6 @@
               <option value="single">Single Photo (1 Foto)</option>
             </select>
           </div>
-
           <div class="control-item">
             <label for="timerSelect">Timer</label>
             <select id="timerSelect">
@@ -74,7 +61,6 @@
               <option value="0">Tanpa Timer</option>
             </select>
           </div>
-
           <div class="control-item checkbox-item">
             <label class="toggle-switch">
               <input type="checkbox" id="chkMirror" checked>
@@ -83,7 +69,6 @@
             </label>
           </div>
         </div>
-
         <div class="action-box">
           <button id="btnCapture" class="btn-capture" disabled>
             <span class="btn-icon">📸</span>
@@ -92,12 +77,10 @@
         </div>
       </div>
 
-      <!-- Result Controls -->
       <div id="resultControls" class="panel-section" style="display: none;">
         <div class="panel-header">
           <h3>Hasil Foto</h3>
         </div>
-
         <div id="frameStyleControls" class="control-item">
           <label>Warna Frame Strip</label>
           <div class="color-picker">
@@ -108,7 +91,6 @@
             <button class="color-btn" data-color="#fef08a" style="background:#fef08a;"></button>
           </div>
         </div>
-
         <div class="action-box vertical">
           <button id="btnDownload" class="btn-download">💾 SIMPAN PNG</button>
           <button id="btnRetake" class="btn-retake">🔄 FOTO ULANG</button>
@@ -120,7 +102,6 @@
   </div>
 
   <canvas id="renderCanvas" style="display: none;"></canvas>
-
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
