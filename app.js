@@ -1,215 +1,60 @@
-const video = document.getElementById('webcam');
-const cameraSelect = document.getElementById('cameraSelect');
-const filterSelect = document.getElementById('filterSelect');
-const modeSelect = document.getElementById('modeSelect');
-const timerSelect = document.getElementById('timerSelect');
-const chkMirror = document.getElementById('chkMirror');
-const btnCapture = document.getElementById('btnCapture');
-const btnDownload = document.getElementById('btnDownload');
-const btnRetake = document.getElementById('btnRetake');
-const videoContainer = document.getElementById('videoContainer');
-const resultContainer = document.getElementById('resultContainer');
-const cameraControls = document.getElementById('cameraControls');
-const resultControls = document.getElementById('resultControls');
-const frameStyleControls = document.getElementById('frameStyleControls');
-const countdownOverlay = document.getElementById('countdownOverlay');
-const flashOverlay = document.getElementById('flashOverlay');
-const statusMsg = document.getElementById('statusMsg');
-const resultImage = document.getElementById('resultImage');
-const renderCanvas = document.getElementById('renderCanvas');
-
-let currentStream = null;
-let isStreaming = false;
-let capturedPhotos = [];
-let selectedFrameColor = '#ffffff';
-
-function showError(msg) { statusMsg.textContent = msg; statusMsg.className = "status-msg error"; }
-function clearError() { statusMsg.textContent = ""; statusMsg.className = "status-msg"; }
-
-async function getCameras() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(d => d.kind === 'videoinput');
-    cameraSelect.innerHTML = '';
-    if (videoDevices.length === 0) { showError("Kamera tidak ditemukan."); return; }
-    videoDevices.forEach((device, idx) => {
-      const opt = document.createElement('option');
-      opt.value = device.deviceId;
-      opt.textContent = device.label || `Kamera ${idx + 1}`;
-      cameraSelect.appendChild(opt);
-    });
-    cameraSelect.disabled = false;
-  } catch (err) { showError("Gagal membaca daftar kamera: " + err.message); }
+const $=id=>document.getElementById(id);
+let stream=null,facing='user',shots=[],busy=false;
+const video=$('video'),canvas=$('strip'),ctx=canvas.getContext('2d');
+function say(t){$('status').textContent=t}
+async function camera(){
+ try{
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:facing,width:{ideal:1280},height:{ideal:720}}});
+  video.srcObject=stream;$('cameraHint').style.display='none';$('capture').disabled=false;$('switchCamera').disabled=false;
+  say('Kamera aktif. Siap berfoto.');
+ }catch(e){say('Kamera gagal dibuka. Pastikan izin kamera diberikan dan aplikasi dibuka melalui HTTPS atau localhost.');}
 }
-
-async function startCamera(deviceId = null) {
-  stopCamera();
-  const constraints = {
-    video: deviceId ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-                    : { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } },
-    audio: false
-  };
-  try {
-    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = currentStream;
-    isStreaming = true;
-    btnCapture.disabled = false;
-    clearError();
-    await getCameras();
-    if (deviceId) cameraSelect.value = deviceId;
-  } catch (err) {
-    isStreaming = false;
-    btnCapture.disabled = true;
-    if (err.name === 'NotAllowedError') showError("Izin kamera ditolak.");
-    else showError("Gagal membuka kamera: " + err.message);
-  }
+$('startCamera').onclick=camera;
+$('switchCamera').onclick=()=>{facing=facing==='user'?'environment':'user';camera()};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function countdown(seconds){
+ const el=$('countdown');el.style.display='block';
+ for(let n=seconds;n>0;n--){el.textContent=n;await wait(1000)}
+ el.textContent='📸';await wait(350);el.style.display='none';
 }
-
-function stopCamera() {
-  if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
-  video.srcObject = null;
-  isStreaming = false;
-  btnCapture.disabled = true;
+function snap(){
+ const c=document.createElement('canvas');c.width=1000;c.height=750;const x=c.getContext('2d');
+ // Mirror the front-facing camera for a natural selfie preview.
+ if(facing==='user'){x.translate(c.width,0);x.scale(-1,1)}
+ x.drawImage(video,0,0,c.width,c.height);return c;
 }
-
-chkMirror.addEventListener('change', () => {
-  if (chkMirror.checked) video.classList.add('mirror');
-  else video.classList.remove('mirror');
-});
-
-filterSelect.addEventListener('change', () => { video.style.filter = filterSelect.value; });
-
-function runCountdown(seconds) {
-  return new Promise((resolve) => {
-    if (seconds <= 0) return resolve();
-    let count = seconds;
-    countdownOverlay.style.display = 'flex';
-    countdownOverlay.textContent = count;
-    const timer = setInterval(() => {
-      count--;
-      if (count > 0) countdownOverlay.textContent = count;
-      else { clearInterval(timer); countdownOverlay.style.display = 'none'; resolve(); }
-    }, 1000);
-  });
+$('capture').onclick=async()=>{
+ if(busy||!stream)return;busy=true;$('capture').disabled=true;shots=[];
+ const count=Number($('photoCount').value),timer=Number($('timer').value);
+ for(let i=0;i<count;i++){say(`Foto ${i+1} dari ${count}…`);await countdown(timer);shots.push(snap());await wait(550)}
+ renderStrip();$('result').style.display='block';say('Selesai! Hasil foto siap disimpan atau dicetak.');$('capture').disabled=false;busy=false;
+};
+function renderStrip(){
+ const n=shots.length,w=800,photoH=520,gap=22,top=180,bottom=220;
+ canvas.width=w;canvas.height=top+n*photoH+(n-1)*gap+bottom;
+ ctx.fillStyle='#ffd329';ctx.fillRect(0,0,w,canvas.height);
+ ctx.fillStyle='#171717';ctx.fillRect(22,22,w-44,canvas.height-44);
+ ctx.fillStyle='#ffd329';ctx.fillRect(38,38,w-76,canvas.height-76);
+ ctx.fillStyle='#171717';ctx.textAlign='center';ctx.font='1000 64px system-ui';ctx.fillText('SEBLAK STORY',w/2,112);
+ ctx.font='bold 24px system-ui';ctx.fillText('SETIAP MANGKOK PUNYA CERITA',w/2,151);
+ let y=top;
+ shots.forEach(s=>{
+  ctx.fillStyle='#171717';ctx.fillRect(52,y-8,w-104,photoH+16);
+  // Crop to fill a 696 x 520 photo area.
+  const sw=s.width,sh=s.height,ratio=696/520,sr=sw/sh;
+  let sx=0,sy=0,ssw=sw,ssh=sh;
+  if(sr>ratio){ssw=sh*ratio;sx=(sw-ssw)/2}else{ssh=sw/ratio;sy=(sh-ssh)/2}
+  ctx.drawImage(s,sx,sy,ssw,ssh,52,y,696,photoH);y+=photoH+gap;
+ });
+ const guest=$('guestName').value.trim();
+ ctx.fillStyle='#171717';ctx.textAlign='center';ctx.font='bold 30px system-ui';ctx.fillText(guest?guest.toUpperCase():'MOMEN SERU BERSAMA KAMI',w/2,canvas.height-125);
+ ctx.font='bold 23px system-ui';ctx.fillText('Jl. Supriadi depan gg Bahra',w/2,canvas.height-82);
+ ctx.font='20px system-ui';ctx.fillText(new Date().toLocaleDateString('id-ID'),w/2,canvas.height-48);
+ $('thumbs').innerHTML='';shots.forEach(s=>{const im=document.createElement('img');im.className='thumb';im.src=s.toDataURL();$('thumbs').append(im)});
 }
-
-function triggerFlash() {
-  flashOverlay.classList.add('active');
-  setTimeout(() => flashOverlay.classList.remove('active'), 200);
-}
-
-function grabFrame() {
-  const ctx = renderCanvas.getContext('2d');
-  const w = video.videoWidth;
-  const h = video.videoHeight;
-  renderCanvas.width = w; renderCanvas.height = h;
-  ctx.save();
-  if (chkMirror.checked) { ctx.translate(w, 0); ctx.scale(-1, 1); }
-  if (filterSelect.value !== 'none') ctx.filter = filterSelect.value;
-  ctx.drawImage(video, 0, 0, w, h);
-  ctx.restore();
-  return renderCanvas.toDataURL('image/png');
-}
-
-btnCapture.addEventListener('click', async () => {
-  if (!isStreaming) return;
-  btnCapture.disabled = true;
-  capturedPhotos = [];
-  const timerSecs = parseInt(timerSelect.value, 10);
-  const mode = modeSelect.value;
-
-  if (mode === 'single') {
-    await runCountdown(timerSecs);
-    triggerFlash();
-    const dataUrl = grabFrame();
-    capturedPhotos.push(dataUrl);
-    renderSingleResult(dataUrl);
-  } else if (mode === 'strip4') {
-    for (let i = 1; i <= 4; i++) {
-      showError(`Foto ${i} dari 4...`);
-      await runCountdown(timerSecs);
-      triggerFlash();
-      const dataUrl = grabFrame();
-      capturedPhotos.push(dataUrl);
-      await new Promise(r => setTimeout(r, 600));
-    }
-    clearError();
-    renderStripResult();
-  }
-  btnCapture.disabled = false;
-});
-
-function switchToResultView() {
-  videoContainer.style.display = 'none';
-  resultContainer.style.display = 'flex';
-  cameraControls.style.display = 'none';
-  resultControls.style.display = 'flex';
-}
-
-function switchToCameraView() {
-  resultContainer.style.display = 'none';
-  videoContainer.style.display = 'flex';
-  resultControls.style.display = 'none';
-  cameraControls.style.display = 'flex';
-}
-
-function renderSingleResult(dataUrl) {
-  frameStyleControls.style.display = 'none';
-  resultImage.src = dataUrl;
-  switchToResultView();
-}
-
-function renderStripResult() {
-  frameStyleControls.style.display = 'block';
-  const ctx = renderCanvas.getContext('2d');
-  const photoW = 600; const photoH = 450;
-  const padding = 30; const gap = 20; const footerH = 100;
-  const stripW = photoW + (padding * 2);
-  const stripH = padding + (photoH * 4) + (gap * 3) + footerH;
-  renderCanvas.width = stripW; renderCanvas.height = stripH;
-  ctx.fillStyle = selectedFrameColor; ctx.fillRect(0, 0, stripW, stripH);
-
-  let loadedCount = 0;
-  capturedPhotos.forEach((src, idx) => {
-    const img = new Image();
-    img.onload = () => {
-      const yPos = padding + idx * (photoH + gap);
-      ctx.drawImage(img, padding, yPos, photoW, photoH);
-      loadedCount++;
-      if (loadedCount === 4) {
-        ctx.fillStyle = (selectedFrameColor === '#ffffff' || selectedFrameColor === '#fbcfe8' || selectedFrameColor === '#bae6fd' || selectedFrameColor === '#fef08a') ? '#0f172a' : '#ffffff';
-        ctx.font = 'bold 24px system-ui, sans-serif'; ctx.textAlign = 'center';
-        const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-        ctx.fillText('PHOTOBOOTH v1.0', stripW / 2, stripH - 45);
-        ctx.font = '14px system-ui, sans-serif';
-        ctx.fillText(dateStr, stripW / 2, stripH - 22);
-        resultImage.src = renderCanvas.toDataURL('image/png');
-        switchToResultView();
-      }
-    };
-    img.src = src;
-  });
-}
-
-document.querySelectorAll('.color-btn').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-    e.target.classList.add('active');
-    selectedFrameColor = e.target.getAttribute('data-color');
-    if (capturedPhotos.length === 4) renderStripResult();
-  });
-});
-
-btnDownload.addEventListener('click', () => {
-  const link = document.createElement('a');
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  link.download = `photobooth-v1.0-${timestamp}.png`;
-  link.href = resultImage.src;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-});
-
-btnRetake.addEventListener('click', switchToCameraView);
-cameraSelect.addEventListener('change', () => { if (isStreaming) startCamera(cameraSelect.value); });
-startCamera();
+$('save').onclick=()=>{const a=document.createElement('a');a.download='Seblak-Story-Photobooth.png';a.href=canvas.toDataURL('image/png');a.click()};
+$('print').onclick=()=>window.print();
+$('retake').onclick=()=>{$('result').style.display='none';shots=[];say('Siap foto ulang.')};
+$('fullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));

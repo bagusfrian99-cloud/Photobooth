@@ -1,137 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Photobooth Studio v1.0</title>
-  <link rel="manifest" href="./manifest.json?v=1.0.0">
-  <meta name="theme-color" content="#0f172a">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=1.0.0">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=1.0.0">
-  <link rel="stylesheet" href="style.css?v=1.0.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffd329">
+<meta name="description" content="Seblak Story Photobooth">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Seblak Story Photobooth</title>
+<style>
+:root{--yellow:#ffd329;--ink:#171717;--cream:#fff9df;--muted:#777;--line:#e8dfbd}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--yellow);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid var(--ink)}
+.brand{font-weight:1000;letter-spacing:.4px;font-size:clamp(20px,4vw,30px);line-height:1}.brand small{display:block;font-size:10px;letter-spacing:2px;margin-top:5px}
+.pill{font-size:11px;font-weight:800;border:2px solid var(--ink);border-radius:99px;padding:6px 10px}
+main{max-width:1100px;margin:auto;padding:18px;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:18px}
+.panel{background:white;border:2px solid var(--ink);border-radius:18px;padding:15px;box-shadow:5px 5px 0 var(--ink)}
+h2{font-size:17px;margin:0 0 12px}.camera-wrap{position:relative;background:#111;border-radius:12px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}
+video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}#countdown{position:absolute;font-size:clamp(70px,15vw,140px);font-weight:1000;color:white;text-shadow:0 3px 15px #000;display:none}
+#cameraHint{color:#ddd;text-align:center;padding:20px}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button,select{font:inherit;border:2px solid var(--ink);border-radius:11px;padding:11px 14px;font-weight:800;background:white;color:var(--ink)}
+button.primary{background:var(--yellow)}button.dark{background:var(--ink);color:white}button:disabled{opacity:.4}
+label{font-size:12px;font-weight:800;display:flex;flex-direction:column;gap:5px;flex:1;min-width:100px}
+.settings{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+#result{display:none;margin-top:16px}#strip{display:block;width:min(100%,360px);margin:0 auto;background:white;border:1px solid #ddd}
+#thumbs{display:flex;gap:7px;margin-top:10px;justify-content:center;flex-wrap:wrap}.thumb{width:65px;height:65px;object-fit:cover;border:2px solid var(--ink);border-radius:8px}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin:10px 0}
+.status{font-size:12px;font-weight:750;margin-top:9px;min-height:18px}
+.side{display:flex;flex-direction:column;gap:15px}.preview{background:#fff9df;border:1px dashed #b6a66c;border-radius:12px;padding:12px;text-align:center}
+.preview strong{font-size:18px}.preview p{font-size:12px;margin:5px 0}
+input[type=text]{width:100%;padding:10px;border:2px solid var(--ink);border-radius:10px;font:inherit}
+footer{text-align:center;padding:18px;font-size:11px;color:#766d50}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:12px}.panel{padding:12px}header{padding:13px}.side{display:grid;grid-template-columns:1fr}}
+@media print{body{background:white}header,main .side,.controls,.settings,h2,.note,.status,footer{display:none!important}main{display:block;padding:0}.panel{border:0;box-shadow:none;padding:0}.camera-wrap{display:none}#result{display:block!important}#strip{width:58mm;max-width:100%;border:0}}
+</style>
 </head>
 <body>
-  <div class="kiosk-app">
-    <main class="view-viewport">
-      <div class="floating-brand">
-        <span>📸</span> <strong>Photobooth v1.0</strong>
-      </div>
-      <div id="videoContainer" class="video-container">
-        <video id="webcam" autoplay playsinline muted class="mirror"></video>
-        <div id="countdownOverlay" class="countdown-overlay"></div>
-        <div id="flashOverlay" class="flash-overlay"></div>
-      </div>
-      <div id="resultContainer" class="result-container" style="display: none;">
-        <img id="resultImage" alt="Hasil Foto">
-      </div>
-    </main>
-
-    <aside class="control-panel">
-      <div id="cameraControls" class="panel-section active">
-        <div class="panel-header">
-          <h3>Pengaturan v1.0</h3>
-        </div>
-        <div class="control-grid">
-          <div class="control-item">
-            <label for="cameraSelect">Kamera</label>
-            <select id="cameraSelect" disabled><option>Memuat...</option></select>
-          </div>
-          <div class="control-item">
-            <label for="filterSelect">Filter</label>
-            <select id="filterSelect">
-              <option value="none">Normal</option>
-              <option value="grayscale(100%)">Hitam Putih</option>
-              <option value="sepia(80%)">Vintage Sepia</option>
-              <option value="contrast(140%)">High Contrast</option>
-              <option value="hue-rotate(180deg)">Cyberpunk</option>
-            </select>
-          </div>
-          <div class="control-item">
-            <label for="modeSelect">Mode</label>
-            <select id="modeSelect">
-              <option value="strip4">Photobooth Strip (4-Cut)</option>
-              <option value="single">Single Photo (1 Foto)</option>
-            </select>
-          </div>
-          <div class="control-item">
-            <label for="timerSelect">Timer</label>
-            <select id="timerSelect">
-              <option value="3" selected>3 Detik</option>
-              <option value="5">5 Detik</option>
-              <option value="0">Tanpa Timer</option>
-            </select>
-          </div>
-          <div class="control-item checkbox-item">
-            <label class="toggle-switch">
-              <input type="checkbox" id="chkMirror" checked>
-              <span class="toggle-slider"></span>
-              <span class="toggle-label">Efek Cermin</span>
-            </label>
-          </div>
-        </div>
-        <div class="action-box">
-          <button id="btnCapture" class="btn-capture" disabled>
-            <span class="btn-icon">📸</span>
-            <span>AMBIL FOTO</span>
-          </button>
-        </div>
-      </div>
-
-      <div id="resultControls" class="panel-section" style="display: none;">
-        <div class="panel-header">
-          <h3>Hasil Foto</h3>
-        </div>
-        <div id="frameStyleControls" class="control-item">
-          <label>Warna Frame Strip</label>
-          <div class="color-picker">
-            <button class="color-btn active" data-color="#ffffff" style="background:#ffffff;"></button>
-            <button class="color-btn" data-color="#1e293b" style="background:#1e293b;"></button>
-            <button class="color-btn" data-color="#fbcfe8" style="background:#fbcfe8;"></button>
-            <button class="color-btn" data-color="#bae6fd" style="background:#bae6fd;"></button>
-            <button class="color-btn" data-color="#fef08a" style="background:#fef08a;"></button>
-          </div>
-        </div>
-        <div class="action-box vertical">
-          <button id="btnDownload" class="btn-download">💾 SIMPAN PNG</button>
-          <button id="btnRetake" class="btn-retake">🔄 FOTO ULANG</button>
-        </div>
-      </div>
-
-      <div id="statusMsg" class="status-msg"></div>
-    </aside>
-  </div>
-
-  <canvas id="renderCanvas" style="display: none;"></canvas>
-  <script src="app.js?v=1.0.0"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1.0.0', { scope: './' })
-          .then(reg => {
-            console.log('SW v1.0 Ready!', reg);
-            // Otomatis cek update terbaru dari server
-            reg.update();
-            reg.onupdatefound = () => {
-              const installingWorker = reg.installing;
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  console.log('Update baru terdeteksi! Memperbarui cache...');
-                  window.location.reload();
-                }
-              };
-            };
-          })
-          .catch(err => console.error('SW Error:', err));
-
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            window.location.reload();
-          }
-        });
-      });
-    }
-  </script>
-</body>
-</html>
+<header><div class="brand">SEBLAK STORY<small>PHOTOBOOTH • SETIAP MANGKOK PUNYA CERITA</small></div><span class="pill">PHOTOBOOTH</span></header>
+<main>
+<section class="panel">
+<h2>📸 Ambil Foto</h2>
+<div class="camera-wrap"><video id="video" autoplay playsinline muted></video><div id="cameraHint">Tekan “Aktifkan Kamera” untuk memulai</div><div id="countdown"></div></div>
+<div class="controls">
+<button class="primary" id="startCamera">Aktifkan Kamera</button>
+<button class="dark" id="capture" disabled>Mulai Foto</button>
+<button id="switchCamera" disabled>Ganti Kamera</button>
+</div>
+<div class="settings">
+<label>Countdown<select id="timer"><option value="3">3 detik</option><option value="5" selected>5 detik</option><option value="10">10 detik</option></select></label>
+<label>Jumlah foto<select id="photoCount"><option value="3" selected>3 foto</option><option value="4">4 foto</option></select></label>
+<label>Nama / pesan<input id="guestName" type="text" maxlength="26" placeholder="Nama kamu (opsional)"></label>
+</div>
+<div class="status" id="status" aria-live="polite">Siap memulai photobooth.</div>
+<div id="result">
+<h2>Hasil Photobooth</h2>
+<canvas id="strip" width="800" height="1800"></canvas>
+<div id="thumbs"></div>
+<div class="controls">
+<button class="primary" id="save">Simpan Foto</button>
+<button class="dark" id="print">Cetak</button>
+<button id="retake">Foto Ulang</button>
+</div>
+<p class="note">Cetak menggunakan dialog cetak Android. Pilih printer yang tersedia dan sesuaikan ukuran kertas. Untuk cetak Bluetooth ESC/POS langsung, diperlukan dukungan printer dan jembatan Android yang kompatibel.</p>
+</div>
+</section>
+<aside class="side">
+<div class="panel">
+<h2>✨ Gaya Seblak Story</h2>
+<div class="preview"><strong>SEBLAK STORY</strong><p>Setiap mangkok punya cerita</p><p>📍 Jl. Supriadi depan gg Bahra</p></div>
+<p class="note">Frame kuning-hitam otomatis dipasang pada hasil foto. Foto diproses di perangkat dan tidak diunggah ke server.</p>
+</div>
+<div class="panel">
+<h2>ℹ️ Petunjuk</h2>
+<p class="note">1. Izinkan akses kamera.<br>2. Atur countdown dan jumlah foto.<br>3. Tekan Mulai Foto, lalu bergaya.<br>4. Simpan atau cetak hasilnya.</p>
+<p class="note">Tips: gunakan kamera belakang tablet untuk hasil lebih tajam, atau sambungkan webcam USB sebelum membuka aplikasi.</p>
+<button id="fullscreen">Layar Penuh</button>
+</div>
+</aside>
+</main>
+<footer>© Seblak Story • Photobooth PWA</footer>
+<script src="app.js"></script>
+</body></html>
