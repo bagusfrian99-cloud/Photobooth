@@ -1,4 +1,4 @@
-const CACHE_NAME = 'photobooth-landscape-v1';
+const CACHE_NAME = 'photobooth-simple-v1';
 const ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,7 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))));
+  e.waitUntil(caches.keys().then((k) => Promise.all(k.filter((x) => x !== CACHE_NAME).map((x) => caches.delete(x)))));
   self.clients.claim();
 });
 

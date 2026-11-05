@@ -8,106 +8,60 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #0f172a;
+  background-color: #000000;
   color: #f8fafc;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.app-viewport {
+.kiosk-app {
   display: flex;
-  flex-direction: column;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
 }
 
-/* Header Navbar */
-.app-header {
-  height: 48px;
-  background-color: #1e293b;
-  border-bottom: 1px solid #334155;
+/* Viewport Kiri (Full Screen Kamera) */
+.view-viewport {
+  flex: 1;
+  height: 100vh;
+  position: relative;
+  background-color: #000;
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 1.25rem;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.brand .icon {
-  font-size: 1.2rem;
-}
-
-.brand h1 {
-  font-size: 1.1rem;
-  font-weight: 700;
+.floating-brand {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 20;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.85rem;
   color: #38bdf8;
-}
-
-.btn-install {
-  background-color: #38bdf8;
-  color: #0f172a;
-  border: none;
-  padding: 0.4rem 0.85rem;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-/* Landscape Main Area (Left: 1fr, Right: 340px) */
-.landscape-main {
-  flex: 1;
   display: flex;
-  flex-direction: row;
-  height: calc(100vh - 48px);
-  padding: 0.75rem;
-  gap: 0.75rem;
-  overflow: hidden;
-}
-
-/* Display Area (Left 1 Screen) */
-.display-area {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  justify-content: center;
   align-items: center;
-  background-color: #020617;
-  border-radius: 12px;
-  border: 1px solid #334155;
-  overflow: hidden;
-  position: relative;
+  gap: 6px;
 }
 
-.screen-card {
+.video-container, .result-container {
   width: 100%;
   height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.video-wrapper, .result-wrapper {
   position: relative;
-  width: 100%;
-  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
 }
 
 video {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  background: #000;
+  object-fit: cover; /* Biar tampilan penuh 100% tanpa bingkai hitam */
   transition: filter 0.2s ease, transform 0.2s ease;
 }
 
@@ -115,12 +69,11 @@ video.mirror {
   transform: scaleX(-1);
 }
 
-.result-wrapper img {
+.result-container img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
 }
 
 .countdown-overlay {
@@ -132,13 +85,13 @@ video.mirror {
   display: none;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.45);
-  font-size: 7rem;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 8rem;
   font-weight: 900;
   color: #38bdf8;
-  text-shadow: 0 0 30px rgba(56, 189, 248, 0.9);
+  text-shadow: 0 0 40px rgba(56, 189, 248, 0.9);
   pointer-events: none;
-  z-index: 10;
+  z-index: 30;
 }
 
 .flash-overlay {
@@ -147,10 +100,10 @@ video.mirror {
   left: 0;
   width: 100%;
   height: 100%;
-  background: white;
+  background: #ffffff;
   opacity: 0;
   pointer-events: none;
-  z-index: 12;
+  z-index: 40;
   transition: opacity 0.15s ease-out;
 }
 
@@ -158,159 +111,202 @@ video.mirror {
   opacity: 0.95;
 }
 
-/* Sidebar Area (Right Control Panel) */
-.sidebar-area {
-  width: 340px;
-  height: 100%;
+/* Panel Kontrol Kanan (Sederhana & Ringkas) */
+.control-panel {
+  width: 270px;
+  height: 100vh;
+  background-color: #0f172a;
+  border-left: 1px solid #1e293b;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
+  z-index: 10;
 }
 
-.sidebar-card {
-  background-color: #1e293b;
-  border-radius: 12px;
-  border: 1px solid #334155;
+.panel-section {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  padding: 1.1rem;
-  display: flex;
-  flex-direction: column;
   justify-content: space-between;
-  overflow-y: auto;
 }
 
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid #334155;
+.panel-header {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #1e293b;
 }
 
-.sidebar-header h2 {
+.panel-header h3 {
   font-size: 0.95rem;
-  color: #f8fafc;
-  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.btn-text {
-  background: none;
-  border: none;
-  color: #38bdf8;
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-.control-section {
+.control-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
   flex: 1;
 }
 
-.form-group {
+.control-item {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
-.form-group label {
+.control-item label {
   font-size: 0.78rem;
-  color: #94a3b8;
-  font-weight: 500;
+  color: #64748b;
+  font-weight: 600;
+
 }
 
 select {
-  background-color: #0f172a;
+  background-color: #1e293b;
   color: #f8fafc;
-  border: 1px solid #475569;
+  border: 1px solid #334155;
   border-radius: 8px;
   padding: 0.55rem 0.75rem;
   font-size: 0.85rem;
   outline: none;
+  cursor: pointer;
 }
 
-.checkbox-group {
+select:focus {
+  border-color: #38bdf8;
+}
+
+/* Switch Mirror Toggle */
+.checkbox-item {
   margin-top: 0.2rem;
 }
 
-.checkbox-label {
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-slider {
+  width: 36px;
+  height: 20px;
+  background-color: #334155;
+  border-radius: 20px;
+  position: relative;
+  transition: 0.2s;
+}
+
+.toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #38bdf8;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-label {
   font-size: 0.82rem;
-  color: #e2e8f0;
+  color: #cbd5e1;
+}
+
+/* Action Buttons */
+.action-box {
+  margin-top: auto;
+  padding-top: 0.75rem;
+
+}
+
+.action-box.vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.btn-capture {
+  width: 100%;
+  background: linear-gradient(135deg, #ec4899, #d946ef);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+  transition: transform 0.1s, opacity 0.2s;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 0.6rem;
-  margin-top: auto;
-  padding-top: 0.8rem;
+.btn-capture:hover:not(:disabled) {
+  transform: translateY(-2px);
 }
 
-.action-buttons.vertical {
-  flex-direction: column;
-}
-
-.btn {
-  flex: 1;
-  padding: 0.75rem 0.85rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.btn:disabled {
+.btn-capture:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.btn-secondary {
-  background-color: #334155;
-  color: #f8fafc;
-}
-
-.btn-secondary.stop {
-  background-color: #ef4444;
-  color: #ffffff;
-}
-
-.btn-action {
-  background-color: #ec4899;
-  color: #ffffff;
-}
-
-.btn-action:hover:not(:disabled) {
-  background-color: #db2777;
-}
-
-.btn-success {
+.btn-download {
+  width: 100%;
   background-color: #22c55e;
-  color: #ffffff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
 }
 
-.btn-success:hover {
-  background-color: #16a34a;
+.btn-retake {
+  width: 100%;
+  background-color: #334155;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
 
-/* Color Options */
-.color-options {
+/* Color Picker */
+.color-picker {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.2rem;
+  margin-top: 0.3rem;
 }
 
 .color-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 2px solid #475569;
+  border: 2px solid #334155;
   cursor: pointer;
   transition: transform 0.2s;
 }
@@ -321,8 +317,8 @@ select {
 }
 
 .status-msg {
-  font-size: 0.8rem;
-  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  padding: 0.4rem;
   border-radius: 6px;
   margin-top: 0.5rem;
   display: none;
@@ -335,24 +331,12 @@ select {
   border: 1px solid #991b1b;
 }
 
-/* Responsif Mobile Portrait Warning or Stacking */
-@media (max-width: 720px) {
-  .landscape-main {
+@media (max-width: 640px) {
+  .kiosk-app {
     flex-direction: column;
-    height: auto;
-    overflow-y: auto;
   }
-
-  html, body {
-    overflow: auto;
-  }
-
-  .sidebar-area {
+  .control-panel {
     width: 100%;
     height: auto;
-  }
-
-  .display-area {
-    min-height: 350px;
   }
 }

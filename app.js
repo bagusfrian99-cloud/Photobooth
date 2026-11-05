@@ -5,18 +5,14 @@ const modeSelect = document.getElementById('modeSelect');
 const timerSelect = document.getElementById('timerSelect');
 const chkMirror = document.getElementById('chkMirror');
 
-const btnToggleCam = document.getElementById('btnToggleCam');
 const btnCapture = document.getElementById('btnCapture');
 const btnDownload = document.getElementById('btnDownload');
 const btnRetake = document.getElementById('btnRetake');
-const btnBackToCam = document.getElementById('btnBackToCam');
-const btnInstall = document.getElementById('btnInstall');
 
-const videoCard = document.getElementById('videoCard');
-const resultCard = document.getElementById('resultCard');
+const videoContainer = document.getElementById('videoContainer');
+const resultContainer = document.getElementById('resultContainer');
 const cameraControls = document.getElementById('cameraControls');
 const resultControls = document.getElementById('resultControls');
-const sidebarTitle = document.getElementById('sidebarTitle');
 const frameStyleControls = document.getElementById('frameStyleControls');
 
 const countdownOverlay = document.getElementById('countdownOverlay');
@@ -27,14 +23,8 @@ const renderCanvas = document.getElementById('renderCanvas');
 
 let currentStream = null;
 let isStreaming = false;
-let deferredPrompt = null;
-
 let capturedPhotos = [];
 let selectedFrameColor = '#ffffff';
-
-if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  showError("Browser tidak mendukung kamera / butuh koneksi HTTPS.");
-}
 
 function showError(msg) {
   statusMsg.textContent = msg;
@@ -83,9 +73,6 @@ async function startCamera(deviceId = null) {
     currentStream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = currentStream;
     isStreaming = true;
-
-    btnToggleCam.textContent = "Matikan Kamera";
-    btnToggleCam.classList.add('stop');
     btnCapture.disabled = false;
     clearError();
 
@@ -93,8 +80,6 @@ async function startCamera(deviceId = null) {
     if (deviceId) cameraSelect.value = deviceId;
   } catch (err) {
     isStreaming = false;
-    btnToggleCam.textContent = "Nyalakan Kamera";
-    btnToggleCam.classList.remove('stop');
     btnCapture.disabled = true;
 
     if (err.name === 'NotAllowedError') {
@@ -112,8 +97,6 @@ function stopCamera() {
   }
   video.srcObject = null;
   isStreaming = false;
-  btnToggleCam.textContent = "Nyalakan Kamera";
-  btnToggleCam.classList.remove('stop');
   btnCapture.disabled = true;
 }
 
@@ -193,7 +176,7 @@ btnCapture.addEventListener('click', async () => {
     renderSingleResult(dataUrl);
   } else if (mode === 'strip4') {
     for (let i = 1; i <= 4; i++) {
-      showError(`Mengambil foto ${i} dari 4...`);
+      showError(`Foto ${i} dari 4...`);
       await runCountdown(timerSecs);
       triggerFlash();
       const dataUrl = grabFrame();
@@ -208,21 +191,17 @@ btnCapture.addEventListener('click', async () => {
 });
 
 function switchToResultView() {
-  videoCard.style.display = 'none';
-  resultCard.style.display = 'flex';
+  videoContainer.style.display = 'none';
+  resultContainer.style.display = 'flex';
   cameraControls.style.display = 'none';
   resultControls.style.display = 'flex';
-  btnBackToCam.style.display = 'block';
-  sidebarTitle.textContent = "✨ Hasil & Frame";
 }
 
 function switchToCameraView() {
-  resultCard.style.display = 'none';
-  videoCard.style.display = 'flex';
+  resultContainer.style.display = 'none';
+  videoContainer.style.display = 'flex';
   resultControls.style.display = 'none';
   cameraControls.style.display = 'flex';
-  btnBackToCam.style.display = 'none';
-  sidebarTitle.textContent = "⚙️ Pengaturan Kamera";
 }
 
 function renderSingleResult(dataUrl) {
@@ -232,7 +211,7 @@ function renderSingleResult(dataUrl) {
 }
 
 function renderStripResult() {
-  frameStyleControls.style.display = 'flex';
+  frameStyleControls.style.display = 'block';
   const ctx = renderCanvas.getContext('2d');
   
   const photoW = 600;
@@ -299,32 +278,10 @@ btnDownload.addEventListener('click', () => {
 });
 
 btnRetake.addEventListener('click', switchToCameraView);
-btnBackToCam.addEventListener('click', switchToCameraView);
-
-btnToggleCam.addEventListener('click', () => {
-  if (isStreaming) stopCamera();
-  else startCamera(cameraSelect.value);
-});
 
 cameraSelect.addEventListener('change', () => {
   if (isStreaming) startCamera(cameraSelect.value);
 });
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  btnInstall.style.display = 'block';
-});
-
-btnInstall.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      btnInstall.style.display = 'none';
-    }
-    deferredPrompt = null;
-  }
-});
-
-getCameras();
+// Auto Start Camera
+startCamera();
