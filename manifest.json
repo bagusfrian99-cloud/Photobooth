@@ -1,6 +1,7 @@
 {
-  "name": "Photobooth Studio",
-  "short_name": "Photobooth",
+  "name": "Photobooth Studio v1.0",
+  "short_name": "Photobooth v1.0",
+  "version": "1.0.0",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

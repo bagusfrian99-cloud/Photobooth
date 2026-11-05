@@ -180,7 +180,7 @@ function renderStripResult() {
         ctx.fillStyle = (selectedFrameColor === '#ffffff' || selectedFrameColor === '#fbcfe8' || selectedFrameColor === '#bae6fd' || selectedFrameColor === '#fef08a') ? '#0f172a' : '#ffffff';
         ctx.font = 'bold 24px system-ui, sans-serif'; ctx.textAlign = 'center';
         const dateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-        ctx.fillText('PHOTOBOOTH STUDIO', stripW / 2, stripH - 45);
+        ctx.fillText('PHOTOBOOTH v1.0', stripW / 2, stripH - 45);
         ctx.font = '14px system-ui, sans-serif';
         ctx.fillText(dateStr, stripW / 2, stripH - 22);
         resultImage.src = renderCanvas.toDataURL('image/png');
@@ -203,7 +203,7 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 btnDownload.addEventListener('click', () => {
   const link = document.createElement('a');
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  link.download = `photobooth-${timestamp}.png`;
+  link.download = `photobooth-v1.0-${timestamp}.png`;
   link.href = resultImage.src;
   document.body.appendChild(link);
   link.click();

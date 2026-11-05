@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Photobooth Studio</title>
-  <link rel="manifest" href="./manifest.json">
+  <title>Photobooth Studio v1.0</title>
+  <link rel="manifest" href="./manifest.json?v=1.0.0">
   <meta name="theme-color" content="#0f172a">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=1.0.0">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=1.0.0">
+  <link rel="stylesheet" href="style.css?v=1.0.0">
 </head>
 <body>
   <div class="kiosk-app">
     <main class="view-viewport">
       <div class="floating-brand">
-        <span>📸</span> <strong>Photobooth Studio</strong>
+        <span>📸</span> <strong>Photobooth v1.0</strong>
       </div>
       <div id="videoContainer" class="video-container">
         <video id="webcam" autoplay playsinline muted class="mirror"></video>
@@ -29,7 +29,7 @@
     <aside class="control-panel">
       <div id="cameraControls" class="panel-section active">
         <div class="panel-header">
-          <h3>Pengaturan</h3>
+          <h3>Pengaturan v1.0</h3>
         </div>
         <div class="control-grid">
           <div class="control-item">
@@ -102,13 +102,34 @@
   </div>
 
   <canvas id="renderCanvas" style="display: none;"></canvas>
-  <script src="app.js"></script>
+  <script src="app.js?v=1.0.0"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .then(reg => console.log('SW Ready!', reg))
+        navigator.serviceWorker.register('./sw.js?v=1.0.0', { scope: './' })
+          .then(reg => {
+            console.log('SW v1.0 Ready!', reg);
+            // Otomatis cek update terbaru dari server
+            reg.update();
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('Update baru terdeteksi! Memperbarui cache...');
+                  window.location.reload();
+                }
+              };
+            };
+          })
           .catch(err => console.error('SW Error:', err));
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
       });
     }
   </script>
